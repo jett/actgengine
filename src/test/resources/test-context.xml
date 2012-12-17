@@ -15,6 +15,6 @@
     <bean id="eventPublisher" class="com.incuventure.ddd.infrastructure.events.impl.SimpleEventPublisher" />
     <bean class="com.incuventure.ddd.infrastructure.events.impl.EventListenerProcessor" />
 
-    <bean id="messenger" class="com.incuventure.accounting.event.Implem"/>
+    <bean id="ledger" class="com.incuventure.accounting.services.Ledger"/>
 
 </beans>
