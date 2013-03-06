@@ -2,13 +2,13 @@ package com.incuventure.accounting.event.payment;
 
 import com.incuventure.ddd.domain.DomainEvent;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 public class ClientPaidEvent implements DomainEvent {
 
     String paymentMode;
     String currency;
-    BigInteger amount;
+    BigDecimal amount;
     String unitCode;
     String reference;
     String description;  // description of the transaction (needed for some)
@@ -21,7 +21,7 @@ public class ClientPaidEvent implements DomainEvent {
         return description;
     }
 
-    public ClientPaidEvent(String reference, String paymentMode, String currency, BigInteger amount, String unitCode) {
+    public ClientPaidEvent(String reference, String paymentMode, String currency, BigDecimal amount, String unitCode) {
         this.paymentMode = paymentMode;
         this.currency = currency;
         this.amount = amount;
@@ -37,7 +37,7 @@ public class ClientPaidEvent implements DomainEvent {
         return currency;
     }
 
-    public BigInteger getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

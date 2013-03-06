@@ -3,13 +3,13 @@ package com.incuventure.accounting.event.product;
 
 import com.incuventure.ddd.domain.DomainEvent;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 public class ContingentLiabilityIncurredEvent implements DomainEvent {
 
     String productCode;
     String currency;
-    BigInteger amount;
+    BigDecimal amount;
     String reference;
     String description;  // description of the transaction (needed for some)
 
@@ -17,7 +17,7 @@ public class ContingentLiabilityIncurredEvent implements DomainEvent {
         return description;
     }
 
-    public ContingentLiabilityIncurredEvent(String reference, String productCode, String currency, BigInteger amount, String description) {
+    public ContingentLiabilityIncurredEvent(String reference, String productCode, String currency, BigDecimal amount, String description) {
         this.productCode = productCode;
         this.currency = currency;
         this.amount = amount;
@@ -34,7 +34,7 @@ public class ContingentLiabilityIncurredEvent implements DomainEvent {
         return currency;
     }
 
-    public BigInteger getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

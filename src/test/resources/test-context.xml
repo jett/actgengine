@@ -15,6 +15,6 @@
     <bean id="eventPublisher" class="com.incuventure.ddd.infrastructure.events.impl.SimpleEventPublisher" />
     <bean class="com.incuventure.ddd.infrastructure.events.impl.EventListenerProcessor" />
 
-    <bean id="ledger" class="com.incuventure.accounting.services.Ledger"/>
+    <bean id="ledger" class="com.incuventure.accounting.domain.Ledger"/>
 
 </beans>

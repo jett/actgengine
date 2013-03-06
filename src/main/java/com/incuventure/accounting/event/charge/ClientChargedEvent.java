@@ -2,7 +2,7 @@ package com.incuventure.accounting.event.charge;
 
 import com.incuventure.ddd.domain.DomainEvent;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 
 public class ClientChargedEvent implements DomainEvent {
@@ -13,9 +13,9 @@ public class ClientChargedEvent implements DomainEvent {
     String reference;    // reference to the transaction
     String description;  // description of the transaction (needed for some)
     String product;
-    BigInteger amount;
+    BigDecimal amount;
 
-    public ClientChargedEvent(String reference, String chargeCode, String product, BigInteger amount, String unitCode, String description) {
+    public ClientChargedEvent(String reference, String chargeCode, String product, BigDecimal amount, String unitCode, String description) {
         this.unitCode = unitCode;
         this.description = description;
         this.chargeCode = chargeCode;
@@ -24,7 +24,7 @@ public class ClientChargedEvent implements DomainEvent {
         this.product = product;
     }
 
-    public ClientChargedEvent(String reference, String chargeCode, String product, BigInteger amount, String unitCode) {
+    public ClientChargedEvent(String reference, String chargeCode, String product, BigDecimal amount, String unitCode) {
         this.unitCode = unitCode;
         this.chargeCode = chargeCode;
         this.reference = reference;
@@ -32,7 +32,7 @@ public class ClientChargedEvent implements DomainEvent {
         this.product = product;
     }
 
-    public ClientChargedEvent(String reference, String chargeCode, String product, BigInteger amount, String unitCode, String glCode, String description) {
+    public ClientChargedEvent(String reference, String chargeCode, String product, BigDecimal amount, String unitCode, String glCode, String description) {
         this.unitCode = unitCode;
         this.description = description;
         this.chargeCode = chargeCode;
@@ -42,7 +42,7 @@ public class ClientChargedEvent implements DomainEvent {
         this.product = product;
     }
 
-    public ClientChargedEvent(String reference, String chargeCode, String product, BigInteger amount) {
+    public ClientChargedEvent(String reference, String chargeCode, String product, BigDecimal amount) {
         this.chargeCode = chargeCode;
         this.description = "";
         this.reference = reference;
@@ -70,7 +70,7 @@ public class ClientChargedEvent implements DomainEvent {
         return description;
     }
 
-    public BigInteger getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

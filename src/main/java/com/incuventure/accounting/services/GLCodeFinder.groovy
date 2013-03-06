@@ -20,6 +20,16 @@ class GLCodeFinder {
                             "909" : [ "RG" : ["PHP" : new GLReference("909", "RG", "PHP", "268610106000", "ACCTS PAYABLE-RES-CABLE", null, null)]]
                     ]
             ],
+            "CILEX" : [
+                    "*" : [
+                            "909" : [ "RG" : ["PHP" : new GLReference("909", "RG", "PHP", "561201680000", "COMMISSION IN LIEUE OF EXCHANGE", null, null)]]
+                    ]
+            ],
+            "EDST" : [
+                    "*" : [
+                            "909" : [ "RG" : ["PHP" : new GLReference("909", "RG", "PHP", "268610101000", "ACCTS PAYABLE-RES-EDST", null, null)]]
+                    ]
+            ],
             "DOCSTAMP" : [
                     "*" : [
                             "909" : [ "RG" : ["PHP" : new GLReference("909", "RG", "PHP", "268610101000", "ACCTS PAYABLE-RES-EDST", null, null)]]
@@ -57,9 +67,11 @@ class GLCodeFinder {
 
     static def paymentReference = [
             "CASA" : new GLReference("*", "*", "*", "xxxxxxxxxxxx", "CASA", null, null),           // this will be suspense
+            "CHECK" : new GLReference("*", "*", "*", "179230402009", "TRADE SUSPENSE", null, null),           // this will be suspense
             "APPLY-AP" : new GLReference("*", "*", "*", "268610189000", "AP-RES-OTHERS", null, null),
             "AP-REMITTANCE" : new GLReference("*", "*", "*", "268610184500", "AP-REMITTANCE", null, null),
-            "AR" : new GLReference("*", "*", "*", "179130102100", "AR", null, null)
+            "AR" : new GLReference("*", "*", "*", "179130102100", "AR", null, null),
+            "IBT" : new GLReference("*", "*", "*", "179221101000", "DUE FROM/TO HO/BR-IBT SETTLEMENT", null, null)
     ]
 
 

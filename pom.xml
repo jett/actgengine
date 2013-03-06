@@ -98,6 +98,13 @@
 
     <build>
         <finalName>d3scaffold</finalName>
+
+        <resources>
+            <resource>
+                <directory>src/test/resources</directory>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -181,7 +188,5 @@
             </plugin>
         </plugins>
     </build>
-
-
 
 </project>

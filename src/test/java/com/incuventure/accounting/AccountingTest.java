@@ -1,58 +1,143 @@
 package com.incuventure.accounting;
 
 
-import com.incuventure.accounting.event.charge.ClientChargedEvent;
-import com.incuventure.accounting.event.payment.ClientPaidEvent;
-import com.incuventure.accounting.event.product.ContingentLiabilityIncurredEvent;
-import com.incuventure.accounting.services.GLCodeFinder;
-import com.incuventure.accounting.services.Ledger;
-import com.incuventure.ddd.domain.DomainEventPublisher;
+import com.incuventure.accounting.domain.TFSAccountingLedger;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.Map;
+import java.math.BigDecimal;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = {"classpath:/test-context.xml"})
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@ContextConfiguration(locations = {"classpath:/test-context.xml"})
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class AccountingTest {
 
-    @Autowired
-    DomainEventPublisher eventPublisher;
+//    @Autowired
+//    DomainEventPublisher eventPublisher;
 
-    @Autowired
-    Ledger ledger;
+//    @Autowired
+//    Ledger ledger;
+
 
     @Test
-    public void testEvent() {
+    public void testChargesPesoSettlementOverpayment() {
 
-        Map chargeDetails = new HashMap();
+        TFSAccountingLedger accountingLedger = new TFSAccountingLedger();
 
-        eventPublisher.publish(new ClientChargedEvent("test", "CORRES", "*", new BigInteger("20"), "909"));
-        eventPublisher.publish(new ClientChargedEvent("test", "CABLE", "*", new BigInteger("120"), "909"));
+        accountingLedger.addChargeEntry("test", "CABLE", "*", new BigDecimal("800"), "909");
+        accountingLedger.addChargeEntry("test", "DOCSTAMP", "*", new BigDecimal("1278"), "909");
+        accountingLedger.addChargeEntry("test", "BANKCOM", "SIGHTLC", new BigDecimal("10579"), "909");
+        accountingLedger.addChargeEntry("test", "SUPPLIES", "*", new BigDecimal("50"), "909");
+        accountingLedger.addChargeEntry("test", "ADVISING", "*", new BigDecimal("2130"), "909");
+        accountingLedger.addChargeEntry("test", "CONFIRM", "*", new BigDecimal("5289.50"), "909");
 
-        eventPublisher.publish(new ContingentLiabilityIncurredEvent("test", "CASH-LC", "USD", new BigInteger("1000000"), "LC122-121-12"));
+        accountingLedger.addPaymentEntry("test", "CASA", "PHP", new BigDecimal("20992.50"), "909");
+        accountingLedger.addPaymentEntry("test", "CHECK", "PHP", new BigDecimal("2000"), "909");
+        accountingLedger.addPaymentEntry("test", "APPLY-AP", "PHP", new BigDecimal("1555"), "909");
 
-        eventPublisher.publish(new ClientPaidEvent("test", "CASA", "PHP", new BigInteger("50000"), "909"));
+        accountingLedger.finalizePayment(false, new BigDecimal(40));
 
-        // product specific events
+        BigDecimal totalCreditPHP = new BigDecimal(0);
+        BigDecimal totalDebitPHP = new BigDecimal(0);
 
-        // clientcharged events
-        // charges payment detail paid (for each mode)
-        // product payment detail paid (for each mode)
-        // all charges paid
-        // all product charges paid
+        for(AccountingEntry entry : accountingLedger.getEntries()) {
 
-        for(AccountingEntry entry : ledger.getEntries()) {
+            if(entry.getAction().equalsIgnoreCase("C")) {
+                totalCreditPHP = totalCreditPHP.add(entry.getAmount());
+            }
+
+            if(entry.getAction().equalsIgnoreCase("D")) {
+                totalDebitPHP = totalDebitPHP.add(entry.getAmount());
+            }
+
             System.out.println(entry);
         }
+
+        System.out.println("Total PHP Credit: " + totalCreditPHP.toString());
+        System.out.println("Total PHP Debit: " + totalDebitPHP.toString());
+
+
+    }
+
+    @Test
+    public void testChargesUSDSettlement() {
+
+        TFSAccountingLedger accountingLedger = new TFSAccountingLedger();
+
+        accountingLedger.addChargeEntry("test", "CABLE", "*", new BigDecimal("800"), "909");
+        accountingLedger.addChargeEntry("test", "DOCSTAMP", "*", new BigDecimal("1273.50"), "909");
+        accountingLedger.addChargeEntry("test", "BANKCOM", "SIGHTLC", new BigDecimal("5270.88"), "909");
+        accountingLedger.addChargeEntry("test", "SUPPLIES", "*", new BigDecimal("50"), "909");
+        accountingLedger.addChargeEntry("test", "CILEX", "*", new BigDecimal("2122.50"), "909");
+        accountingLedger.addChargeEntry("test", "ADVISING", "*", new BigDecimal("2122.50"), "909");
+        accountingLedger.addChargeEntry("test", "CONFIRM", "*", new BigDecimal("5270.88"), "909");
+
+        accountingLedger.addPaymentEntry("test", "CASA", "USD", new BigDecimal("100"), "909");
+        accountingLedger.addPaymentEntry("test", "APPLY-AP", "USD", new BigDecimal("50"), "909");
+        accountingLedger.addPaymentEntry("test", "AP-REMITTANCE", "USD", new BigDecimal("50"), "909");
+        accountingLedger.addPaymentEntry("test", "AR", "USD", new BigDecimal("198.36"), "909");
+
+        accountingLedger.finalizePayment(false, new BigDecimal(42.45));
+
+        BigDecimal totalCreditPHP = new BigDecimal(0);
+        BigDecimal totalDebitPHP = new BigDecimal(0);
+
+        for(AccountingEntry entry : accountingLedger.getEntries()) {
+
+            if(entry.getAction().equalsIgnoreCase("C")) {
+                totalCreditPHP = totalCreditPHP.add(entry.getAmount());
+            }
+
+            if(entry.getAction().equalsIgnoreCase("D")) {
+                totalDebitPHP = totalDebitPHP.add(entry.getAmount());
+            }
+
+            System.out.println(entry);
+        }
+
+        System.out.println("Total PHP Credit: " + totalCreditPHP.toString());
+        System.out.println("Total PHP Debit: " + totalDebitPHP.toString());
+
+    }
+
+    @Test
+    public void testChargesPHPSettlementCWT() {
+
+        TFSAccountingLedger accountingLedger = new TFSAccountingLedger();
+
+        accountingLedger.addChargeEntry("test", "CABLE", "*", new BigDecimal("800"), "909");
+        accountingLedger.addChargeEntry("test", "DOCSTAMP", "*", new BigDecimal("1278"), "909");
+        accountingLedger.addChargeEntry("test", "BANKCOM", "SIGHTLC", new BigDecimal("5289.50"), "909");
+        accountingLedger.addChargeEntry("test", "SUPPLIES", "*", new BigDecimal("50"), "909");
+        accountingLedger.addChargeEntry("test", "ADVISING", "*", new BigDecimal("2130"), "909");
+        accountingLedger.addChargeEntry("test", "CONFIRM", "*", new BigDecimal("5289.50"), "909");
+
+        accountingLedger.addPaymentEntry("test", "CASA", "PHP", new BigDecimal("4837"), "909");
+        accountingLedger.addPaymentEntry("test", "CHECK", "PHP", new BigDecimal("2000"), "909");
+        accountingLedger.addPaymentEntry("test", "IBT", "PHP", new BigDecimal("2500"), "909");
+        accountingLedger.addPaymentEntry("test", "APPLY-AP", "PHP", new BigDecimal("1500"), "909");
+        accountingLedger.addPaymentEntry("test", "AP-REMITTANCE", "PHP", new BigDecimal("3000"), "909");
+        accountingLedger.addPaymentEntry("test", "AR", "PHP", new BigDecimal("894.31"), "909"); // todo: CDT Was deducted here
+
+        accountingLedger.finalizePayment(true, new BigDecimal(42.45));
+
+        BigDecimal totalCreditPHP = new BigDecimal(0);
+        BigDecimal totalDebitPHP = new BigDecimal(0);
+
+        for(AccountingEntry entry : accountingLedger.getEntries()) {
+
+            if(entry.getAction().equalsIgnoreCase("C")) {
+                totalCreditPHP = totalCreditPHP.add(entry.getAmount());
+            }
+
+            if(entry.getAction().equalsIgnoreCase("D")) {
+                totalDebitPHP = totalDebitPHP.add(entry.getAmount());
+            }
+
+            System.out.println(entry);
+        }
+
+        System.out.println("Total PHP Credit: " + totalCreditPHP.toString());
+        System.out.println("Total PHP Debit: " + totalDebitPHP.toString());
 
     }
 

@@ -4,6 +4,9 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
+    <!--<bean id="eventBus" class="com.google.common.eventbus.EventBus"/>-->
+    <!--<bean id="eventBusPostProcessor" class="com.incuventure.spring.guava.EventBusPostProcessor"/>-->
+
     <context:annotation-config/>
 
     <context:component-scan base-package="com.incuventure.accounting.handler"/>
@@ -11,5 +14,7 @@
 
     <bean id="eventPublisher" class="com.incuventure.ddd.infrastructure.events.impl.SimpleEventPublisher" />
     <bean class="com.incuventure.ddd.infrastructure.events.impl.EventListenerProcessor" />
+
+    <bean id="ledger" class="com.incuventure.accounting.domain.Ledger"/>
 
 </beans>
