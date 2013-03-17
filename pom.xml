@@ -29,6 +29,13 @@
             <version>2.0.0</version>
         </dependency>
 
+        <!-- for days 360 calculation -->
+        <dependency>
+            <groupId>jfree</groupId>
+            <artifactId>jcommon</artifactId>
+            <version>1.0.16</version>
+        </dependency>
+
         <!-- Spring 3 dependencies -->
         <dependency>
             <groupId>org.springframework</groupId>
