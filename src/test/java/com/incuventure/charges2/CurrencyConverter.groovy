@@ -8,18 +8,18 @@ class CurrencyConverter {
         rates = new Node(null, "rates");
     }
 
-    public addRate(String rateType, String baseCurrency, String targetCurrency, BigDecimal rate) {
+    public addRate(String rateType, String sourceCurrency, String targetCurrency, BigDecimal rate) {
 
-        if(rates.get(baseCurrency).isEmpty() ) {
-            rates.appendNode(baseCurrency, null, baseCurrency)
+        if(rates.get(sourceCurrency).isEmpty() ) {
+            rates.appendNode(sourceCurrency, null)
         }
 
-        Node baseNode = (Node) ((NodeList) rates.get(baseCurrency)).get(0)
+        Node baseNode = (Node) ((NodeList) rates.get(sourceCurrency)).get(0)
 
         NodeList targetNodeList = (NodeList) baseNode.get(targetCurrency)
 
         if (targetNodeList.isEmpty()) {
-            baseNode.appendNode(targetCurrency, null, targetCurrency)
+            baseNode.appendNode(targetCurrency, null)
         }
 
         Node targetNode = (Node) ((NodeList) baseNode.get(targetCurrency)).get(0)
@@ -32,18 +32,17 @@ class CurrencyConverter {
 
     }
 
-    public getRate(String rateType, String baseCurrency, String targetCurrency) {
+    public getRate(String rateType, String sourceCurrency, String targetCurrency) {
 
-        NodeList baseList = (NodeList) rates.get(baseCurrency)
+        NodeList targetList = (NodeList) rates.get(sourceCurrency)
 
-        if (baseList.isEmpty()) {
+        if (targetList.isEmpty()) {
             return null
         }
         else {
 
-            NodeList targetList = (NodeList) baseList.get(0).get(targetCurrency)
-
-            NodeList ratesList = (NodeList) targetList.get(0).get(rateType)
+            NodeList sourceList = (NodeList) targetList.get(0).get(targetCurrency)
+            NodeList ratesList = (NodeList) sourceList.get(0).get(rateType)
 
             if (ratesList.isEmpty()) {
                 return null
@@ -55,13 +54,35 @@ class CurrencyConverter {
         }
     }
 
-    public convert(String rateType, String baseCurrency, BigDecimal baseAmount, String targetCurrency) {
+    public String getXml() {
 
-        BigDecimal rate = getRate(rateType, baseCurrency, targetCurrency)
+        def sw = new StringWriter()
+        new XmlNodePrinter(new PrintWriter(sw)).print(rates)
+       return sw.toString()
 
-        BigDecimal newValue = new BigDecimal(baseAmount).divide(rate)
+    }
 
-        return newValue
+    public convert(String rateType, String sourceCurrency, BigDecimal baseAmount, String targetCurrency) {
+
+        BigDecimal newValue = BigDecimal.ZERO;
+
+        if (sourceCurrency.equalsIgnoreCase(targetCurrency)) {
+            return baseAmount
+        }
+
+        BigDecimal rate = getRate(rateType, sourceCurrency, targetCurrency)
+
+        if (rate == null) {
+
+            // if no rate is available, try the reverse
+            rate = getRate(rateType, targetCurrency, sourceCurrency)
+            newValue = baseAmount.divide(rate,6,BigDecimal.ROUND_UP)
+
+        } else {
+            newValue = baseAmount.multiply(rate)
+        }
+
+        return newValue.setScale(2, BigDecimal.ROUND_UP)
     }
 
 }

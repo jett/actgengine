@@ -1,0 +1,15 @@
+
+
+Charges ======
+
+we need the following:
+- rates to determine base amounts
+   + 3C-USD
+   + USD-PHP if not mixed
+   + USD-PHP rate for mixed
+
+   + USD-PHP (buying USD using PHP)
+
+
+"exports/dmcashlc"
+   +

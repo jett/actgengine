@@ -21,7 +21,7 @@ class TFSCalculatorTest {
 
         println currencyConverter.getRate("SELL", "PHP", "USD")
 
-        println "converted:: " + currencyConverter.convert("URR", "PHP", 55, "USD")
+        println "converted:: " + currencyConverter.convert("URR", "PHP", 55.55, "USD")
 
     }
 

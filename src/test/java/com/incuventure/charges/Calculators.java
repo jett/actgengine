@@ -17,7 +17,7 @@ public class Calculators {
     // based on baseAmount, charge [firstCharge] for the first [firstAmount] and [forEveryCharge] for the succeeding
     // [forEveryAmount]
 
-    BigDecimal firstSucceedingFixed(BigDecimal baseAmount,
+    public BigDecimal firstSucceedingFixed(BigDecimal baseAmount,
                                BigDecimal firstAmount,
                                BigDecimal firstCharge,
                                BigDecimal forEveryAmount,
@@ -44,10 +44,19 @@ public class Calculators {
 
     }
 
-    BigDecimal firstSucceedingPercentage(BigDecimal baseAmount,
+    public BigDecimal firstSucceedingPercentage(BigDecimal baseAmount,
+                                                           BigDecimal firstAmount,
+                                                           BigDecimal firstCharge,
+                                                           BigDecimal percentOfRemaining) {
+
+        return firstSucceedingPercentageWithMinimum(baseAmount, firstAmount, firstCharge, percentOfRemaining, BigDecimal.ZERO);
+
+    }
+
+    public BigDecimal firstSucceedingPercentageWithMinimum(BigDecimal baseAmount,
                                BigDecimal firstAmount,
                                BigDecimal firstCharge,
-                               BigDecimal percentOfRemaining) {
+                               BigDecimal percentOfRemaining, BigDecimal minimum) {
 
         BigDecimal balance = baseAmount;
         BigDecimal totalCharge = BigDecimal.ZERO;
@@ -55,16 +64,20 @@ public class Calculators {
         if(balance.compareTo(BigDecimal.ZERO) > 0) {
 
             // todo: refactor to just divide
-            totalCharge = totalCharge.add(firstAmount);
+            totalCharge = totalCharge.add(firstCharge);
             balance = balance.subtract(firstAmount);
 
             totalCharge = totalCharge.add(balance.multiply(percentOfRemaining));
         }
 
-        return totalCharge;
+        if(minimum.compareTo(BigDecimal.ZERO) > 0 && totalCharge.compareTo(minimum) <= 0) {
+            return minimum; //.setScale(2, BigDecimal.ROUND_UP);
+        }
+
+        return totalCharge; // .setScale(2, BigDecimal.ROUND_UP);
     }
 
-    BigDecimal forEvery(BigDecimal baseAmount,
+    public BigDecimal forEvery(BigDecimal baseAmount,
                         BigDecimal everyAmount,
                         BigDecimal chargeForEvery) {
 
@@ -83,8 +96,10 @@ public class Calculators {
 
     }
 
-    BigDecimal percentageOf(BigDecimal amount, BigDecimal percentage ) {
-        return amount.multiply(percentage);
+    public BigDecimal percentageOf(BigDecimal amount, BigDecimal percentage ) {
+
+        return amount.multiply(percentage); // .setScale(2, BigDecimal.ROUND_UP);
+
     }
 
     // date utilities
