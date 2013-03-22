@@ -1,44 +1,58 @@
 package com.incuventure.charges2
 
-import com.incuventure.charges.Calculators
-
 class ChargesCalculator {
 
     CurrencyConverter currencyConverter
+    Map <String, String> ratesConfig
+
+    String thirdToUsdRateType
+    String usdToPhpSingleRateType
+    String usdToPhpMixedRateType
+    String settlementToDraftUSDRateType
+
+    Boolean mixedPayment
+
+    Map results = new HashMap<String, Object>()
+
 
     public void setCurrencyConverter(CurrencyConverter currencyConverter) {
         this.currencyConverter = currencyConverter
     }
 
-    public Map getNonLCCharges(Map productDetails) {
+    public void configRatesBasis(String thirdToUsd, String usdToPhpSingle, String usdToPhpMixed, String settlementToDraftUSD) {
+        
+            // rate type to use to convert thirds to USD
+            this.thirdToUsdRateType = thirdToUsd
+
+            // rate type to use to convert USD to PHP if a single currency is used for payment
+            this.usdToPhpSingleRateType = usdToPhpSingle
+
+            // rate type to use to convert USD to PHP if mixed currency is used for payment
+            this.usdToPhpMixedRateType = usdToPhpMixed
+
+            // rate type to use to convert settlement currency to the draft currency (currency of amount being paid)
+            this.settlementToDraftUSDRateType = settlementToDraftUSD
+
+    }
+
+    protected Object getBaseVariable(String variableName) {
+
+        return results.get(variableName)
+
+    }
+
+    protected void precomputeBase(Map productDetails) {
 
         BigDecimal usdBase = BigDecimal.ZERO
         BigDecimal phpBase = BigDecimal.ZERO
 
         String productCurrency = productDetails.productCurrency
         BigDecimal productAmount = productDetails.productAmount
+
+        HashSet<String> productSettlementCurrencies = new HashSet<String>()
+
         String chargesSettlementCurrency = productDetails.chargesSettlementCurrency
         String productSettlementCurrency = ""
-
-        // compute for the base
-        if (!productCurrency.equalsIgnoreCase("USD") && !productCurrency.equalsIgnoreCase("PHP")) {
-
-            // convert
-            usdBase = currencyConverter.convert("REG-SELL", productCurrency, productAmount, "USD")
-            phpBase = currencyConverter.convert("URR", "USD", usdBase, "PHP")
-
-        } else if(productCurrency.equalsIgnoreCase("USD")) {
-
-            usdBase = productAmount
-            phpBase = currencyConverter.convert("URR", "USD", usdBase, "PHP")
-
-        } else if (productCurrency.equalsIgnoreCase("PHP")) {
-
-            phpBase = productAmount
-
-        }
-
-        // =========================================== product payment ============================================
 
         Map settlementPerCurrency = new HashMap<String, BigDecimal>()
         Map settlementPerModeCurrency = new HashMap<String, Object>()
@@ -49,16 +63,20 @@ class ChargesCalculator {
         // any third currency used to settle product payment
         String productSettlementThirdCurrency = ""
 
-        // get the totals per currency per settlement mode
-        if (productDetails.containsKey("settlement")) {
+        mixedPayment = false
 
-            productDetails.settlement.each() { settlement ->
+        // get the totals per currency per settlement mode
+        if (productDetails.containsKey("productSettlement")) {
+
+            productDetails.productSettlement.each() { settlement ->
 
                 if (settlement.currency && settlement.amount && settlement.mode) {
 
                     BigDecimal amount = new BigDecimal(settlement.amount)
                     String currency = settlement.currency
                     String mode = settlement.mode
+
+                    productSettlementCurrencies.add(currency)
 
                     // total settlement per currency
                     if (!settlementPerCurrency.containsKey(currency)) {
@@ -72,8 +90,6 @@ class ChargesCalculator {
                     if (!settlementPerModeCurrency[(mode)]) {
                         settlementPerModeCurrency.put(mode, [:])
                     }
-
-                    println settlementPerModeCurrency
 
                     if (!settlementPerModeCurrency[(mode)][(currency)]) {
                         settlementPerModeCurrency[(mode)][(currency)] = BigDecimal.ZERO
@@ -89,29 +105,41 @@ class ChargesCalculator {
                 }
             }
 
+            if (productSettlementCurrencies.size() > 1 && productSettlementCurrencies.contains("PHP")) {
+                mixedPayment = true
+            }
+
             fcSettlementTotalInUsd = fcSettlementTotalInUsd.add(settlementPerCurrency.get("USD"));
             fcSettlementTotalInUsd = fcSettlementTotalInUsd.add(currencyConverter.convert("REG-SELL", productSettlementThirdCurrency, settlementPerCurrency.get(productSettlementThirdCurrency), "USD"));
-
         }
 
-        println String.format("Product: %s %,.2f ", productCurrency, productAmount)
-        println String.format("USD Base: USD %,.2f ", usdBase)
-        println String.format("PHP Base: PHP %,.2f ", phpBase)
+        // compute for the base
+        if (!productCurrency.equalsIgnoreCase("USD") && !productCurrency.equalsIgnoreCase("PHP")) {
 
-        println String.format("3C Settlement Total 3C %,.2f ", settlementPerCurrency.get(productSettlementThirdCurrency) ? BigDecimal.ZERO : settlementPerCurrency.get(productSettlementThirdCurrency))
-        println String.format("USD Settlement Total USD %,.2f ", settlementPerCurrency.get("USD") ? settlementPerCurrency.get("USD") : BigDecimal.ZERO )
-        println String.format("PHP Settlement Total PHP %,.2f ", settlementPerCurrency.get("PHP") ? settlementPerCurrency.get("PHP") : BigDecimal.ZERO )
+            // convert
+            usdBase = currencyConverter.convert(thirdToUsdRateType, productCurrency, productAmount, "USD")
+            phpBase = currencyConverter.convert(mixedPayment ? usdToPhpMixedRateType : usdToPhpSingleRateType, "USD", usdBase, "PHP")
 
-        println String.format("Amount settled in foreign currency (in USD) %,.2f ", fcSettlementTotalInUsd)
+        } else if(productCurrency.equalsIgnoreCase("USD")) {
 
-        println "Settlement per mode: " + settlementPerModeCurrency
+            usdBase = productAmount
+            phpBase = currencyConverter.convert(mixedPayment ? usdToPhpMixedRateType : usdToPhpSingleRateType, "USD", usdBase, "PHP")
 
+        } else if (productCurrency.equalsIgnoreCase("PHP")) {
+
+            phpBase = productAmount
+
+        }
 
         // get payment NOT in TR loan
         BigDecimal totalNotSettledByTRinPHP = BigDecimal.ZERO
 
         BigDecimal totalNotInTrUSD = BigDecimal.ZERO
         BigDecimal totalNotInTrPHP = BigDecimal.ZERO
+
+        String trCurrency
+        BigDecimal totalTrAmount = BigDecimal.ZERO
+        BigDecimal totalTrAmountInPHP = BigDecimal.ZERO
 
         settlementPerModeCurrency.each() { mode, settlements ->
 
@@ -120,56 +148,74 @@ class ChargesCalculator {
                 settlements.each() { String currency, BigDecimal amount ->
 
                     if (currency.equalsIgnoreCase("USD")) {
-                        println currency + " XXX " + amount
                         totalNotInTrUSD = totalNotInTrUSD.add(amount)
                     } else if (currency.equalsIgnoreCase("PHP")) {
                         totalNotInTrPHP = totalNotInTrPHP.add(amount)
                     } else {
-                        println currency + " YYY " + amount
-                        totalNotInTrUSD = totalNotInTrUSD.add(currencyConverter.convert("REG-SELL", currency, amount, "USD"))
+                        totalNotInTrUSD = totalNotInTrUSD.add(currencyConverter.convert(thirdToUsdRateType, currency, amount, "USD"))
                     }
+                }
+
+            } else {
+
+                // settlement has TR
+
+                settlements.each() { String currency, BigDecimal amount ->
+
+                    // assumed that this
+                    if (currency.equalsIgnoreCase("USD")) {
+                        trCurrency = currency
+                        totalTrAmount = totalTrAmount.add(amount)
+                    } else if (currency.equalsIgnoreCase("PHP")) {
+                        trCurrency = currency
+                        totalTrAmount = totalTrAmount.add(amount)
+                    }
+                    // No TR for thirds
+
                 }
 
             }
         }
 
-        totalNotSettledByTRinPHP = totalNotSettledByTRinPHP.add(totalNotInTrPHP)
-        println "USD of non-tr " + totalNotInTrUSD
-        totalNotSettledByTRinPHP = totalNotSettledByTRinPHP.add(currencyConverter.convert("URR", "USD", totalNotInTrUSD, "PHP"))
+        if (trCurrency.equalsIgnoreCase("USD")) {
+            totalTrAmountInPHP = totalNotInTrUSD.add(currencyConverter.convert(totalTrAmount, trCurrency, totalTrAmount, "PHP"))
+        } else {
+            totalTrAmountInPHP =  totalTrAmount
+        }
 
-        println String.format("Total NOT settled via TR: %,.2f", totalNotSettledByTRinPHP)
+        totalNotSettledByTRinPHP = totalNotSettledByTRinPHP.add(totalNotInTrPHP)
+        totalNotSettledByTRinPHP = totalNotSettledByTRinPHP.add(currencyConverter.convert(mixedPayment ? usdToPhpMixedRateType : usdToPhpSingleRateType, "USD", totalNotInTrUSD, "PHP"))
+
+
+
+        results.put("productCurrency", productCurrency)
+        results.put("productAmount", productAmount)
+
+        results.put("chargesBaseUSD", usdBase)
+        results.put("chargesBasePHP", phpBase)
+
+        results.put("productSettlementThirdTotals", settlementPerCurrency.get(productSettlementThirdCurrency) ? settlementPerCurrency.get(productSettlementThirdCurrency) : BigDecimal.ZERO )
+        results.put("productSettlementUSDTotals", settlementPerCurrency.get("USD") ? settlementPerCurrency.get("USD") : BigDecimal.ZERO)
+        results.put("productSettlementPHPTotals", settlementPerCurrency.get("PHP") ? settlementPerCurrency.get("PHP") : BigDecimal.ZERO)
+
+        results.put("settledInForeignInUSD", fcSettlementTotalInUsd)
+
+        results.put("totalNotSettledByTRinPHP", totalNotSettledByTRinPHP)
+
+        results.put("trCurrency", trCurrency)
+        results.put("totalTrAmount", totalTrAmount)
+        results.put("totalTrAmountInPHP", totalTrAmountInPHP)
+
+
+//        results.each() { key, value ->
+//
+//            println String.format("key: %s value %s", key, value)
+//
+//        }
 
         // =========================== calculation specific
 
-        Calculators calculators = new Calculators()
 
-        // parameterized factors
-        BigDecimal cilexFactor = 0.01.divide(4)
-        BigDecimal bankCommissionFactor = 0.01.divide(8)
-        BigDecimal cableFeeDefault = 1000
-        BigDecimal bookingComissionDefault = 500
-        BigDecimal notarialFeeDefault = 50
-        BigDecimal bspRegFeeDefault = 100
-
-        println "cilex Factor: " + cilexFactor
-
-        // charges
-        BigDecimal bankComission = calculators.firstSucceedingPercentageWithMinimum(phpBase, 50000, 125, bankCommissionFactor, 1000)
-        BigDecimal cableFee = cableFeeDefault
-        BigDecimal cilex = calculators.percentageOf(fcSettlementTotalInUsd, cilexFactor)
-        BigDecimal bookingCommission = bookingComissionDefault;
-        BigDecimal notarialFee = notarialFeeDefault;
-        BigDecimal bspRegFee = bspRegFeeDefault
-
-        println "Bank Comission : " + bankComission.setScale(2, BigDecimal.ROUND_UP)
-        println "Cable Fee : " + cableFee.setScale(2, BigDecimal.ROUND_UP)
-        println "CILEX in USD " + cilex.setScale(2, BigDecimal.ROUND_UP)
-        println "CILEX in PHP " + currencyConverter.convert("URR", "USD", cilex, "PHP").setScale(2, BigDecimal.ROUND_UP)
-        println "Booking Comission : " + bookingCommission.setScale(2, BigDecimal.ROUND_UP)
-        println "Notarial Fee : " + notarialFee.setScale(2, BigDecimal.ROUND_UP)
-        println "BSP Registration Fee : " + bspRegFee.setScale(2, BigDecimal.ROUND_UP)
-
-        return [:]
 
     }
 

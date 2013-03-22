@@ -1,4 +1,4 @@
-package com.incuventure.charges2;
+package com.incuventure.charges;
 
 import java.math.BigDecimal;
 

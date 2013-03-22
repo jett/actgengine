@@ -28,7 +28,7 @@ public class Calculators {
 
         if(balance.compareTo(BigDecimal.ZERO) > 0) {
 
-            totalCharge = totalCharge.add(firstAmount);
+            totalCharge = totalCharge.add(firstCharge);
             balance = balance.subtract(firstAmount);
 
         }
