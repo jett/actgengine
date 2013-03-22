@@ -109,8 +109,13 @@ class ChargesCalculator {
                 mixedPayment = true
             }
 
-            fcSettlementTotalInUsd = fcSettlementTotalInUsd.add(settlementPerCurrency.get("USD"));
-            fcSettlementTotalInUsd = fcSettlementTotalInUsd.add(currencyConverter.convert("REG-SELL", productSettlementThirdCurrency, settlementPerCurrency.get(productSettlementThirdCurrency), "USD"));
+            if (settlementPerCurrency.containsKey("USD")){
+                fcSettlementTotalInUsd = fcSettlementTotalInUsd.add(settlementPerCurrency.get("USD"));
+            }
+
+            if (settlementPerCurrency.containsKey(productSettlementThirdCurrency)){
+                fcSettlementTotalInUsd = fcSettlementTotalInUsd.add(currencyConverter.convert("REG-SELL", productSettlementThirdCurrency, settlementPerCurrency.get(productSettlementThirdCurrency), "USD"));
+            }
         }
 
         // compute for the base
@@ -178,15 +183,13 @@ class ChargesCalculator {
         }
 
         if (trCurrency.equalsIgnoreCase("USD")) {
-            totalTrAmountInPHP = totalNotInTrUSD.add(currencyConverter.convert(totalTrAmount, trCurrency, totalTrAmount, "PHP"))
+            totalTrAmountInPHP = currencyConverter.convert(usdToPhpSingleRateType, trCurrency, totalTrAmount, "PHP")
         } else {
             totalTrAmountInPHP =  totalTrAmount
         }
 
         totalNotSettledByTRinPHP = totalNotSettledByTRinPHP.add(totalNotInTrPHP)
         totalNotSettledByTRinPHP = totalNotSettledByTRinPHP.add(currencyConverter.convert(mixedPayment ? usdToPhpMixedRateType : usdToPhpSingleRateType, "USD", totalNotInTrUSD, "PHP"))
-
-
 
         results.put("productCurrency", productCurrency)
         results.put("productAmount", productAmount)
@@ -207,11 +210,13 @@ class ChargesCalculator {
         results.put("totalTrAmountInPHP", totalTrAmountInPHP)
 
 
-//        results.each() { key, value ->
-//
-//            println String.format("key: %s value %s", key, value)
-//
-//        }
+        results.each() { key, value ->
+
+            println String.format("%s \t %s", key, value)
+
+        }
+
+        println "--------------------"
 
         // =========================== calculation specific
 

@@ -19,16 +19,16 @@ class NonLcChargesTest {
                 chargeSettlementCurrency: "PHP",
                 productSettlement : [
                         [mode: "CASA", currency: "EUR", amount: "20000"],
-                        [mode: "CASA", currency: "USD", amount: "40170.27"]
-                        [mode: "TR", currency: "USD", amount: "10000"]
+                        [mode: "CASA", currency: "USD", amount: "40170.27"],
+                        [mode: "TR", currency: "PHP", amount: "407500"]
                 ]
         ]
 
-//        NonLCChargesCalculator calculator = new NonLCChargesCalculator ();
-//
-//        calculator.setCurrencyConverter(currencyConverter)
-//        calculator.configRatesBasis("REG-SELL", "URR", "REG-SELL", "REG-SELL")
-//        calculator.compute(productDetails)
+        NonLCChargesCalculator calculator = new NonLCChargesCalculator ();
+
+        calculator.setCurrencyConverter(currencyConverter)
+        calculator.configRatesBasis("REG-SELL", "URR", "REG-SELL", "REG-SELL")
+        calculator.compute(productDetails)
 
     }
 

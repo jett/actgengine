@@ -25,7 +25,23 @@ class NonLCChargesCalculator extends ChargesCalculator{
         BigDecimal cilex = calculators.percentageOf((BigDecimal)getBaseVariable("settledInForeignInUSD"), cilexFactor)
         BigDecimal bookingCommission = bookingComissionDefault;
         // TODO: add condition if TR loan is used
-        BigDecimal docStamps = calculators.forEvery((BigDecimal)getBaseVariable("totalNotSettledByTRinPHP"), 200, 0.30)
+        BigDecimal docStamps = BigDecimal.ZERO
+
+
+        println getBaseVariable("totalNotSettledByTRinPHP")
+        println getBaseVariable("totalTrAmountInPHP")
+
+        if(((BigDecimal)getBaseVariable("totalTrAmount")).compareTo(BigDecimal.ZERO) == 1) {
+            docStamps = calculators.firstSucceedingFixed((BigDecimal)getBaseVariable("totalTrAmountInPHP"), 5000, 20, 5000, 10)
+        }
+
+
+        if ((BigDecimal)getBaseVariable("totalNotSettledByTRinPHP")?.compareTo(BigDecimal.ZERO)==1) {
+            BigDecimal normalAmount = (BigDecimal)getBaseVariable("totalNotSettledByTRinPHP") - (BigDecimal)getBaseVariable("totalTrAmountInPHP")
+            println "normalAmount:"+normalAmount
+            docStamps = docStamps.add(calculators.forEvery( normalAmount, 200, 0.30))
+        }
+
         BigDecimal notarialFee = notarialFeeDefault;
         BigDecimal bspRegFee = bspRegFeeDefault
 
